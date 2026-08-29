@@ -1,0 +1,59 @@
+{
+    "name": "Capgemini_HRFlow360_PageCardView",
+    "label": "Single Page Card View",
+    "description": "Single Page Card View",
+    "organization": "Capgemini",
+    "version": "0.0.1",
+    "library": "HRFlow360",
+    "componentKey": "Capgemini_HRFlow360_PageCardView",
+    "type": "Widget",
+    "subtype": [
+        "PAGE",
+        "CASE"
+    ],
+    "subtypeLabel": "PAGE and CASE",
+    "icon": "OneColumnPage.svg",
+    "properties": [
+        {
+            "name": "title",
+            "label": "Label value",
+            "format": "TEXT"
+        },
+        {
+            "name": "displayAs",
+            "label": "Display As",
+            "format": "SELECT",
+            "defaultValue": "cardView",
+            "localize": true,
+            "source": [
+                {
+                    "key": "simpleView",
+                    "value": "Simple View"
+                },
+                {
+                    "key": "cardView",
+                    "value": "Card View"
+                }
+            ]
+        },
+        {
+            "format": "LABEL",
+            "label": "About",
+            "name": "PegaAboutLabel",
+            "variant": "h3"
+        },
+        {
+            "format": "LABEL",
+            "label": "Capgemini_HRFlow360 0.0.1, Sat Aug 29 2026, 26.1.0-103357",
+            "name": "PegaAboutData",
+            "variant": "primary"
+        }
+    ],
+    "defaultConfig": {
+        "label": "@L $this.label",
+        "title": "@L $this.label"
+    },
+    "buildDate": "2026-08-29T03:48:21.971Z",
+    "infinityVersion": "26.1.0-103357",
+    "packageCosmosVersion": "8.27.2"
+}
