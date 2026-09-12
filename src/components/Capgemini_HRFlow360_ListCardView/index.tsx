@@ -47,56 +47,52 @@ function CapgeminiHrFlow360ListCardView(props: CapgeminiHrFlow360ListCardViewPro
   }, [pConn]);
   return (
     <StyledCapgeminiHrFlow360ListCardViewWrapper>
-      {list.map((employee: Employee, index) => (
-        // eslint-disable-next-line react/no-array-index-key
-        <div className='employee-card' key={index}>
-          <div>
-            <strong>Name:</strong> {employee.EmployeeFullName}
+      <div className='employee-grid'>
+        {list.map((employee: Employee, index) => (
+          // eslint-disable-next-line react/no-array-index-key
+          <div className='employee-card' key={index}>
+            <div className='card-header'>
+              <div className='avatar'>
+                {employee.EmployeeFullName?.split(' ')
+                  .map(n => n[0])
+                  .join('')
+                  .substring(0, 2)}
+              </div>
+
+              <div>
+                <h3>{employee.EmployeeFullName}</h3>
+                <span>{employee.EmploymentType}</span>
+              </div>
+            </div>
+
+            <div className='card-content'>
+              <p>
+                <strong>Email:</strong> {employee.PersonalEmailAddress}
+              </p>
+
+              <p>
+                <strong>Phone:</strong> {employee.PrimaryContactNumber}
+              </p>
+
+              <p>
+                <strong>Previous Employer:</strong> {employee.PreviousEmployer}
+              </p>
+
+              <p>
+                <strong>Joined:</strong> {employee.DateOfJoining}
+              </p>
+            </div>
+
+            <div className='skills-container'>
+              {employee.SkillsAndTechnologies?.split(',').map(skill => (
+                <span key={skill.trim()} className='skill-tag'>
+                  {skill.trim()}
+                </span>
+              ))}
+            </div>
           </div>
-          <div>
-            <strong>Gender:</strong> {employee.Gender}
-          </div>
-          <div>
-            <strong>Date of Birth:</strong> {employee.DateOfBirth}
-          </div>
-          <div>
-            <strong>Date of Joining:</strong> {employee.DateOfJoining}
-          </div>
-          <div>
-            <strong>Employment Type:</strong> {employee.EmploymentType}
-          </div>
-          <div>
-            <strong>Official Email:</strong> {employee.OfficialEmailAddress}
-          </div>
-          <div>
-            <strong>Personal Email:</strong> {employee.PersonalEmailAddress}
-          </div>
-          <div>
-            <strong>Primary Contact:</strong> {employee.PrimaryContactNumber}
-          </div>
-          <div>
-            <strong>Emergency Contact Name:</strong> {employee.EmergencyContactName}
-          </div>
-          <div>
-            <strong>Emergency Contact Number:</strong> {employee.EmergencyContactNumber}
-          </div>
-          <div>
-            <strong>Current Address:</strong> {employee.CurrentAddress}
-          </div>
-          <div>
-            <strong>Permanent Address:</strong> {employee.PermanentAddress}
-          </div>
-          <div>
-            <strong>Educational Qualification:</strong> {employee.EducationalQualification}
-          </div>
-          <div>
-            <strong>Previous Employer:</strong> {employee.PreviousEmployer}
-          </div>
-          <div>
-            <strong>Skills & Technologies:</strong> {employee.SkillsAndTechnologies}
-          </div>
-        </div>
-      ))}
+        ))}
+      </div>
     </StyledCapgeminiHrFlow360ListCardViewWrapper>
   );
 }
