@@ -159,6 +159,8 @@ function CapgeminiHrFlow360PageCardView(props: CapgeminiHrFlow360PageCardViewPro
         ))}
 
       {/*
+      Localization
+       {getPConnect().getLocalizedValue('Author')} |{getPConnect().getLocalizedValue('Role')}
     <pre>
       {JSON.stringify(employeeDetails, null, 2)}
     </pre>

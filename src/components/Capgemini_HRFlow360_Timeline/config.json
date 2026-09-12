@@ -1,11 +1,11 @@
 {
-    "name": "Capgemini_HRFlow360_PageCardView",
-    "label": "Single Page Card View",
-    "description": "Single Page Card View",
+    "name": "Capgemini_HRFlow360_Timeline",
+    "label": "Timeline",
+    "description": "Displays a chronological view of business milestones, stages, and activities grouped by timeline periods (for example Start, 6 Months, 12 Months). Supports completed, in-progress, and pending statuses with visual progress indicators.",
     "organization": "Capgemini",
     "version": "0.0.1",
     "library": "HRFlow360",
-    "componentKey": "Capgemini_HRFlow360_PageCardView",
+    "componentKey": "Capgemini_HRFlow360_Timeline",
     "type": "Widget",
     "subtype": [
         "PAGE",
@@ -20,21 +20,30 @@
             "format": "TEXT"
         },
         {
-            "name": "displayAs",
-            "label": "Display As",
+            "name": "stageInfoDisplay",
+            "label": "Show Stage Information",
             "format": "SELECT",
-            "defaultValue": "cardView",
-            "localize": true,
+            "defaultValue": "all",
             "source": [
                 {
-                    "key": "simpleView",
-                    "value": "Simple View"
+                    "key": "all",
+                    "value": "All Stages"
                 },
                 {
-                    "key": "cardView",
-                    "value": "Card View"
+                    "key": "active",
+                    "value": "Only Active Stage"
+                },
+                {
+                    "key": "none",
+                    "value": "Do Not Display"
                 }
             ]
+        },
+        {
+            "name": "showStatus",
+            "label": "Show Status",
+            "format": "BOOLEAN",
+            "defaultValue": true
         },
         {
             "format": "LABEL",
@@ -50,10 +59,9 @@
         }
     ],
     "defaultConfig": {
-        "label": "@L $this.label",
         "title": "@L $this.label"
     },
-    "buildDate": "2026-09-12T09:57:13.388Z",
+    "buildDate": "2026-09-12T09:57:13.461Z",
     "infinityVersion": "26.1.0-103357",
     "packageCosmosVersion": "8.27.2"
 }
