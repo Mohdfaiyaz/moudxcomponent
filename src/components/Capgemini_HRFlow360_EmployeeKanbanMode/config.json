@@ -1,11 +1,11 @@
 {
-    "name": "Capgemini_HRFlow360_EmployeeInsight",
-    "label": "Employee Insight",
-    "description": "EmployeeInsight provides an interactive employee directory that allows users to browse employee records and view detailed employee profiles through a master-detail interface powered by Pega Data Pages.",
+    "name": "Capgemini_HRFlow360_EmployeeKanbanMode",
+    "label": "Employee Kanban Mode",
+    "description": "the Kanban drag-and-drop feature ",
     "organization": "Capgemini",
     "version": "0.0.1",
     "library": "HRFlow360",
-    "componentKey": "Capgemini_HRFlow360_EmployeeInsight",
+    "componentKey": "Capgemini_HRFlow360_EmployeeKanbanMode",
     "type": "Widget",
     "subtype": [
         "PAGE",
@@ -35,7 +35,7 @@
     "defaultConfig": {
         "title": "@L $this.label"
     },
-    "buildDate": "2026-09-13T06:41:36.630Z",
+    "buildDate": "2026-09-13T06:41:40.684Z",
     "infinityVersion": "26.1.0-103357",
     "packageCosmosVersion": "8.27.2"
 }
