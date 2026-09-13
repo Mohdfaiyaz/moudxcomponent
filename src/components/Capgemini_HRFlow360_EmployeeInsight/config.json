@@ -1,11 +1,11 @@
 {
-    "name": "Capgemini_HRFlow360_PageCardView",
-    "label": "Single Page Card View",
-    "description": "Single Page Card View",
+    "name": "Capgemini_HRFlow360_EmployeeInsight",
+    "label": "Employee Insight",
+    "description": "EmployeeInsight provides an interactive employee directory that allows users to browse employee records and view detailed employee profiles through a master-detail interface powered by Pega Data Pages.",
     "organization": "Capgemini",
     "version": "0.0.1",
     "library": "HRFlow360",
-    "componentKey": "Capgemini_HRFlow360_PageCardView",
+    "componentKey": "Capgemini_HRFlow360_EmployeeInsight",
     "type": "Widget",
     "subtype": [
         "PAGE",
@@ -18,23 +18,6 @@
             "name": "title",
             "label": "Label value",
             "format": "TEXT"
-        },
-        {
-            "name": "displayAs",
-            "label": "Display As",
-            "format": "SELECT",
-            "defaultValue": "cardView",
-            "localize": true,
-            "source": [
-                {
-                    "key": "simpleView",
-                    "value": "Simple View"
-                },
-                {
-                    "key": "cardView",
-                    "value": "Card View"
-                }
-            ]
         },
         {
             "format": "LABEL",
@@ -50,10 +33,10 @@
         }
     ],
     "defaultConfig": {
-        "label": "@L $this.label",
-        "title": "@L $this.label"
+        "label": "Create operator",
+        "title": "Create operator"
     },
-    "buildDate": "2026-09-13T04:14:03.436Z",
+    "buildDate": "2026-09-13T04:13:59.322Z",
     "infinityVersion": "26.1.0-103357",
     "packageCosmosVersion": "8.27.2"
 }
