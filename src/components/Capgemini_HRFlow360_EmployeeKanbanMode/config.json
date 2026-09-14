@@ -27,7 +27,7 @@
         },
         {
             "format": "LABEL",
-            "label": "Capgemini_HRFlow360 0.0.1, Sun Sep 13 2026, 26.1.0-103357",
+            "label": "Capgemini_HRFlow360 0.0.1, Mon Sep 14 2026, 26.1.0-103357",
             "name": "PegaAboutData",
             "variant": "primary"
         }
@@ -35,7 +35,7 @@
     "defaultConfig": {
         "title": "@L $this.label"
     },
-    "buildDate": "2026-09-13T06:41:40.684Z",
+    "buildDate": "2026-09-14T11:17:04.608Z",
     "infinityVersion": "26.1.0-103357",
     "packageCosmosVersion": "8.27.2"
 }
