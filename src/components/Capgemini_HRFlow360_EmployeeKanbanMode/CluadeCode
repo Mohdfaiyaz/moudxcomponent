@@ -1,257 +1,199 @@
-import { withConfiguration } from '@pega/cosmos-react-core';
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@pega/cosmos-react-core';
-
+import { withConfiguration } from '@pega/cosmos-react-core';
 import type { PConnFieldProps } from '../shared/PConnProps';
-import StyledCapgeminiHrFlow360EmployeeKanbanModeWrapper from './styles';
 
-// NOTE: Using a loose index signature here instead of a strict two-property
-// interface, because the actual clipboard page class has many more fields
-// (see types.ts). We must never drop fields we don't explicitly manage.
-interface Employee {
+export interface Employee {
+  pyGUID?: string;
   EmployeeFullName: string;
-  pyStatusValue: string;
-  [key: string]: any;
+  Gender: string;
+  DateOfBirth: string;
+  DateOfJoining: string;
+  EmploymentType: string;
+  PersonalEmailAddress: string;
+  OfficialEmailAddress: string;
+  PrimaryContactNumber: string;
+  pyStatusValue?: string;
 }
 
-interface CapgeminiHrFlow360EmployeeKanbanModeProps extends PConnFieldProps {}
-
-function CapgeminiHrFlow360EmployeeKanbanMode(props: CapgeminiHrFlow360EmployeeKanbanModeProps) {
-  const { getPConnect } = props;
-
-  // Master Kanban Dual-Column State Machine
-  const [existingEmployees, setExistingEmployees] = useState<Employee[]>([]);
-  const [selectedEmployees, setSelectedEmployees] = useState<Employee[]>([]);
-
-  // Tracks active column drag styling
-  const [activeOverColumn, setActiveOverColumn] = useState<string | null>(null);
-
-  const pConn = getPConnect?.();
+export function CapgeminiHrFlow360EmployeeKanbanMode(props: PConnFieldProps) {
+  const pConn = props.getPConnect?.();
   const actions = pConn?.getActionsApi?.();
 
-  // --- 2. INITIAL DATA LOAD & PROPERTIES LIST MONITOR ---
-  useEffect(() => {
-    try {
-      if (pConn) {
-        // Query the direct Page List values from the case clipboard (.ListOfEmployee)
-        const employeeList = pConn.getValue?.('.ListOfEmployee') ?? [];
-        const parsedList: Employee[] = Array.isArray(employeeList)
-          ? employeeList
-          : Object.values(employeeList);
+  const [employees, setEmployees] = useState<Employee[]>([]);
 
-        // Sort items into their columns checking 'Yes' strictly against pyStatusValue
-        setExistingEmployees(
-          parsedList.filter((emp: Employee) => String(emp.pyStatusValue).toLowerCase() !== 'yes')
-        );
-
-        setSelectedEmployees(
-          parsedList.filter((emp: Employee) => String(emp.pyStatusValue).toLowerCase() === 'yes')
-        );
-      }
-    } catch (e) {
-      console.error('❌ DX LOAD ERROR:', e);
+  // Helper function to read current clipboard state and print full array JSON directly to console
+  const logCurrentPegaJson = (contextName: string) => {
+    if (!pConn) return;
+    const latestListData = pConn.getValue?.('.ListOfEmployee');
+    if (latestListData) {
+      const freshList = Array.isArray(latestListData)
+        ? latestListData
+        : Object.values(latestListData);
+      console.log(`📋 [${contextName} Output] Full ListOfEmployee JSON Code Payload:`);
+      console.log(JSON.stringify(freshList, null, 2));
     }
-  }, [pConn, props]); // Component updates if changes happen from the OOTB grid inputs
-
-  // --- 3. DRAG START SETUP ---
-  const handleDragStart = (employee: Employee, source: 'existing' | 'selected') => {
-    sessionStorage.setItem('kanban_employee', JSON.stringify(employee));
-    sessionStorage.setItem('kanban_source', source);
   };
 
-  // --- 4. COMPREHENSIVE SAVING ENGINE (Using Whole-List Synchronization) ---
-  const updateEmployeeSelectionOnClipboard = (
-    employeeName: string,
-    isSelectedValue: 'Yes' | 'No'
-  ) => {
+  // 1. Initial Load from Pega Clipboard
+  useEffect(() => {
+    if (pConn) {
+      const listData = pConn.getValue?.('.ListOfEmployee');
+      if (listData) {
+        const parsedList: Employee[] = Array.isArray(listData) ? listData : Object.values(listData);
+        setEmployees(parsedList);
+      }
+    }
+  }, [pConn]);
+
+  // 2. Click Handler: Updates ONLY the scalar string field paths for a single row
+  const moveEmployeeToSelected = (originalIndex: number) => {
+    if (!actions) return;
+
+    const currentEmployee = employees[originalIndex];
+    if (!currentEmployee) return;
+
+    const nextStatus = 'Yes';
+
+    // Update local UI state immediately so the card shifts smoothly
+    setEmployees(prevList => {
+      const nextList = [...prevList];
+      if (nextList[originalIndex]) {
+        nextList[originalIndex] = {
+          ...nextList[originalIndex],
+          pyStatusValue: nextStatus
+        };
+      }
+      return nextList;
+    });
+
+    // Fire isolated field-level string updates matching her exact path concatenation template
+    const basePath = `.ListOfEmployee(${originalIndex + 1})`;
+    try {
+      actions.updateFieldValue(`${basePath}.EmployeeFullName`, currentEmployee.EmployeeFullName);
+      actions.updateFieldValue(`${basePath}.pyStatusValue`, nextStatus);
+      console.log(`✅ [Card Click Success]: Target fields saved at ${basePath}`);
+
+      // Wait for Pega updates to commit to the local store model before printing full payload
+      setTimeout(() => {
+        logCurrentPegaJson('SINGLE CARD CLICK');
+      }, 100);
+    } catch (err) {
+      console.error(`❌ Error on card click path ${basePath}:`, err);
+    }
+  };
+
+  // 3. Your Master Save Button Routine (Maintained Exactly as Verified)
+  const updateAllStatuses = () => {
     if (!pConn || !actions) return;
 
-    // Grab a clean copy of the entire list from the clipboard
-    const fullClipboardList = [...(pConn.getValue?.('.ListOfEmployee') || [])];
+    const listData = pConn.getValue?.('.ListOfEmployee');
+    if (!listData) return;
 
-    // Find our matching employee row using their exact Full Name string parameter match
-    const index = fullClipboardList.findIndex(emp => emp.EmployeeFullName === employeeName);
+    const currentList = Array.isArray(listData) ? listData : Object.values(listData);
 
-    if (index > -1) {
-      // IMPORTANT: spread the existing row so every other property on the
-      // page (Gender, DateOfBirth, EmploymentType, etc.) is preserved.
-      // Overwriting the row with only two fields is what was causing
-      // "invalid request data" — the page class needs its full shape.
-      fullClipboardList[index] = {
-        ...fullClipboardList[index],
-        pyStatusValue: isSelectedValue
-      };
+    for (const [index, item] of currentList.entries()) {
+      const basePath = `.ListOfEmployee(${index + 1})`;
+      const employeeItem = item as Employee;
 
       try {
-        actions.updateFieldValue('.ListOfEmployee', fullClipboardList);
-        console.log(
-          `[Kanban Array Saved Sync]: Updated entire .ListOfEmployee list back to Pega successfully.`
+        actions.updateFieldValue(
+          `${basePath}.EmployeeFullName`,
+          employeeItem.EmployeeFullName || ''
         );
+        actions.updateFieldValue(`${basePath}.pyStatusValue`, 'Yes');
+        console.log(`✅ Success: Updated ${basePath} fields via Master Button`);
       } catch (err) {
-        console.error('Critical failure updating Pega list content via updateFieldValue:', err);
+        console.error(`❌ Error on path ${basePath}:`, err);
       }
     }
+
+    // Wait for the bulk loop actions to commit before printing full payload
+    setTimeout(() => {
+      logCurrentPegaJson('UPDATE ALL STATUSES BUTTON');
+    }, 100);
   };
 
-  // --- 5. DROP EVENT ACTION PIPELINE ---
-  const handleDrop = (target: 'existing' | 'selected') => {
-    setActiveOverColumn(null);
+  // Separate items into columns for the static UI layout configuration
+  const existingEmployees = employees
+    .map((emp, index) => ({ emp, originalIndex: index }))
+    .filter(item => item.emp.pyStatusValue !== 'Yes');
 
-    const employee = JSON.parse(sessionStorage.getItem('kanban_employee') || '{}');
-    const source = sessionStorage.getItem('kanban_source');
-
-    // Prevent execution if dropped back inside the identical source origin container panel
-    if (source === target) return;
-
-    const targetStatusString = target === 'selected' ? 'Yes' : 'No';
-
-    // Preserve every original field on the employee, only override status
-    const updatedEmployeeInstance = {
-      ...employee,
-      pyStatusValue: targetStatusString
-    };
-
-    // Trigger the real-time server write-back assignment loop task
-    updateEmployeeSelectionOnClipboard(employee.EmployeeFullName, targetStatusString);
-
-    // Swap columns smoothly on the client side UI views
-    if (target === 'selected') {
-      setExistingEmployees(prev =>
-        prev.filter(e => e.EmployeeFullName !== employee.EmployeeFullName)
-      );
-      setSelectedEmployees(prev => [...prev, updatedEmployeeInstance]);
-    } else {
-      setSelectedEmployees(prev =>
-        prev.filter(e => e.EmployeeFullName !== employee.EmployeeFullName)
-      );
-      setExistingEmployees(prev => [...prev, updatedEmployeeInstance]);
-    }
-  };
+  const selectedEmployees = employees
+    .map((emp, index) => ({ emp, originalIndex: index }))
+    .filter(item => item.emp.pyStatusValue === 'Yes');
 
   return (
-    <StyledCapgeminiHrFlow360EmployeeKanbanModeWrapper>
-      <Card>
-        <CardContent>
-          <div className='kanban-board'>
-            {/* COLUMN 1: SCOPED WORKSPACE AREA */}
+    <div>
+      {/* Master Save Button */}
+      <div style={{ marginBottom: '20px' }}>
+        <button type='button' onClick={updateAllStatuses}>
+          Update All Statuses
+        </button>
+      </div>
+
+      {/* Kanban UI Layout */}
+      <div style={{ display: 'flex', gap: '20px' }}>
+        {/* Column 1: Existing Employee */}
+        <div
+          style={{ border: '1px solid black', width: '350px', minHeight: '400px', padding: '10px' }}
+        >
+          <h4>Existing Employee (Scoped)</h4>
+          {existingEmployees.map(({ emp, originalIndex }) => (
             <div
-              className='kanban-column scoped'
-              onDragOver={e => {
-                e.preventDefault();
-                if (activeOverColumn !== 'scoped') setActiveOverColumn('scoped');
+              key={emp.pyGUID || emp.EmployeeFullName || originalIndex}
+              style={{
+                border: '1px dashed gray',
+                padding: '10px',
+                marginBottom: '8px',
+                background: '#f9f9f9'
               }}
-              onDragLeave={() => setActiveOverColumn(null)}
-              onDrop={() => handleDrop('existing')}
             >
-              <div className='column-header'>
-                <span>Scoped Opportunities</span>
-                <span className='badge-count'>{existingEmployees.length}</span>
-              </div>
-              <div className={`column-body ${activeOverColumn === 'scoped' ? 'drag-over' : ''}`}>
-                {existingEmployees.length === 0 ? (
-                  <div className='empty-placeholder'>Drag opportunities here to deselect</div>
-                ) : (
-                  existingEmployees.map((employee: Employee) => (
-                    <div
-                      key={employee.EmployeeFullName}
-                      draggable
-                      onDragStart={() => handleDragStart(employee, 'existing')}
-                      className='kanban-card'
-                    >
-                      <h4>{employee.EmployeeFullName}</h4>
-                      <div
-                        className='card-skills'
-                        style={{ marginTop: '4px', fontSize: '0.8rem', color: '#64748b' }}
-                      >
-                        <strong>Status:</strong> {employee.pyStatusValue || 'No'}
-                      </div>
+              <p>
+                <strong>Name:</strong> {emp.EmployeeFullName || 'Unnamed Employee'}
+              </p>
+              <p>
+                <small>Status: {emp.pyStatusValue || 'No'}</small>
+              </p>
 
-                      <div className='card-footer'>
-                        <button
-                          type='button'
-                          className='action-link'
-                          onClick={() => {
-                            updateEmployeeSelectionOnClipboard(employee.EmployeeFullName, 'Yes');
-                            setExistingEmployees(prev =>
-                              prev.filter(e => e.EmployeeFullName !== employee.EmployeeFullName)
-                            );
-                            setSelectedEmployees(prev => [
-                              ...prev,
-                              { ...employee, pyStatusValue: 'Yes' }
-                            ]);
-                          }}
-                        >
-                          Select &rarr;
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+              <button
+                type='button'
+                onClick={() => moveEmployeeToSelected(originalIndex)}
+                style={{ marginTop: '5px', cursor: 'pointer' }}
+              >
+                Select Employee →
+              </button>
             </div>
+          ))}
+        </div>
 
-            {/* COLUMN 2: SELECTED TARGET WORKSPACE */}
+        {/* Column 2: Selected Employee */}
+        <div
+          style={{ border: '1px solid black', width: '350px', minHeight: '400px', padding: '10px' }}
+        >
+          <h4>Selected Employee</h4>
+          {selectedEmployees.map(({ emp, originalIndex }) => (
             <div
-              className='kanban-column selected'
-              onDragOver={e => {
-                e.preventDefault();
-                if (activeOverColumn !== 'selected') setActiveOverColumn('selected');
+              key={emp.pyGUID || emp.EmployeeFullName || originalIndex}
+              style={{
+                border: '1px dashed gray',
+                padding: '10px',
+                marginBottom: '8px',
+                background: '#e6f7ff'
               }}
-              onDragLeave={() => setActiveOverColumn(null)}
-              onDrop={() => handleDrop('selected')}
             >
-              <div className='column-header'>
-                <span>Selected Categories</span>
-                <span className='badge-count'>{selectedEmployees.length}</span>
-              </div>
-              <div className={`column-body ${activeOverColumn === 'selected' ? 'drag-over' : ''}`}>
-                {selectedEmployees.length === 0 ? (
-                  <div className='empty-placeholder'>Drop employee cards here to select</div>
-                ) : (
-                  selectedEmployees.map((employee: Employee) => (
-                    <div
-                      key={employee.EmployeeFullName}
-                      draggable
-                      onDragStart={() => handleDragStart(employee, 'selected')}
-                      className='kanban-card'
-                    >
-                      <h4>{employee.EmployeeFullName}</h4>
-                      <div
-                        className='card-skills'
-                        style={{ marginTop: '4px', fontSize: '0.8rem', color: '#64748b' }}
-                      >
-                        <strong>Status:</strong> {employee.pyStatusValue || 'Yes'}
-                      </div>
-
-                      <div className='card-footer'>
-                        <button
-                          type='button'
-                          className='action-link'
-                          style={{ color: '#dc2626' }}
-                          onClick={() => {
-                            updateEmployeeSelectionOnClipboard(employee.EmployeeFullName, 'No');
-                            setSelectedEmployees(prev =>
-                              prev.filter(e => e.EmployeeFullName !== employee.EmployeeFullName)
-                            );
-                            setExistingEmployees(prev => [
-                              ...prev,
-                              { ...employee, pyStatusValue: 'No' }
-                            ]);
-                          }}
-                        >
-                          &larr; Deselect
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+              <p>
+                <strong>Name:</strong> {emp.EmployeeFullName || 'Unnamed Employee'}
+              </p>
+              <p>
+                <small>Status: {emp.pyStatusValue}</small>
+              </p>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-    </StyledCapgeminiHrFlow360EmployeeKanbanModeWrapper>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
 export default withConfiguration(CapgeminiHrFlow360EmployeeKanbanMode);
+read this code
